@@ -5,6 +5,8 @@ import numpy as np
 import json 
 from werkzeug.utils import secure_filename
 from ml.pre_processing import preprocessing_data
+# Import predict function to run model after preprocessing
+from ml.predict import predict
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -64,6 +66,17 @@ def upload_file():
             
             # Preprocess data
             processed_data = preprocessing_data(df , drop_cols=["latitude" , "longitude"  , "county" , "state" , "cust_orig_date" , "date_of_birth" , "acct_suspd_date" ] , categorical_encoder='onehot' , path= app.config['UPLOAD_FOLDER'])
+
+            # Run model predictions (synchronously). This will read the processed file and produce
+            # `data/x_predicted_output.csv` per ml/predict.py implementation.
+            try:
+                results = predict()
+                # Store output file path for later pages
+                # session['predicted_output'] = results.get('output_file') if isinstance(results, dict) else 'data/x_predicted_output.csv'
+            except Exception as e:
+                # If prediction fails, flash and redirect to index
+                flash(f'Prediction failed: {str(e)}')
+                return redirect(url_for('index'))
 
             return redirect(url_for('predictions'))
             
@@ -128,15 +141,15 @@ def customer_analysis():
         return redirect(url_for('index'))
     
     # Read processed data
-    df = pd.read_csv(processed_file)
+    # df = pd.read_csv(processed_file)
     
     customers_data = []
     
     # Generate mock churn probabilities (you can replace this with actual model predictions)
-    churn_probs = np.random.uniform(0, 1, len(df))
+    df = pd.read_csv(r'data\x_predicted_output.csv')
     
     for idx, row in df.iterrows():
-        prob = churn_probs[idx]
+        prob = row['final_prediction']
         churn_probability = round(prob * 100, 1)
         
         # Determine risk level
@@ -196,11 +209,15 @@ def customer_analysis():
         
         # Create customer dictionary
         customer = {
-            'id': f'CUST_{idx + 1:04d}',
+            'id': row['individual_id'],
             'name': f'Customer {idx + 1}',
             'segment': segment,
             'risk_level': risk_level,
             'churn_probability': churn_probability,
+            # expose raw values from processed output so frontend can display them
+            'confidence_score': row.get('confidence_score'),
+            'age_in_years': row.get('age_in_years'),
+            'curr_ann_amt': row.get('curr_ann_amt'),
             'tenure': tenure,
             'monthly_charges': monthly_charges,
             'total_charges': total_charges,

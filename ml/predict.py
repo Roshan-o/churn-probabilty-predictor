@@ -3,7 +3,12 @@ import joblib
 import os
 import pandas as pd
 import numpy as np
-from neural_net import MLP
+try:
+    # Use package-relative import when imported as part of the `ml` package
+    from .neural_net import MLP
+except Exception:
+    # Fallback for running the script directly
+    from neural_net import MLP
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -49,6 +54,8 @@ def combined_confidence(p1, p2, w_agree=0.4, w_cert=0.6):
 
 def predict(path="data/x_processed.csv"):
     print(f"Loading data from: {path}")
+    # Read original x_test early so we can attempt ID-based alignment
+    df_features_x = pd.read_csv(r'data\x_test.csv')
     df_features = pd.read_csv(path)
     X_np = df_features.values.astype(np.float32)
     # ----------------------------------------------------
@@ -81,15 +88,49 @@ def predict(path="data/x_processed.csv"):
     print("Calculating confidence scores...")
     confidence_scores, final_predictions = combined_confidence(predictions_xgb, predictions_mlp)
 
-    # Add predictions and confidence scores to the input dataframe
-    output_df = df_features.copy()
-    output_df['predictions_xgb'] = predictions_xgb
-    output_df['predictions_mlp'] = predictions_mlp
-    output_df['confidence_score'] = confidence_scores
-    output_df['final_prediction'] = final_predictions
+    # Prepare predictions dataframe
+    pred_df = pd.DataFrame({
+        'predictions_xgb': predictions_xgb,
+        'predictions_mlp': predictions_mlp,
+        'confidence_score': confidence_scores,
+        'final_prediction': final_predictions
+    })
+
+    # Try to align by a stable identifier if available in both dataframes
+    id_candidates = ['individual_id', 'address_id', 'id', 'customer_id']
+    id_col = None
+    for c in id_candidates:
+        if c in df_features.columns and c in df_features_x.columns:
+            id_col = c
+            break
+
+    if id_col is not None:
+        # Use the id column from the processed features as index for predictions
+        print(f"Aligning predictions to x_test by id column: {id_col}")
+        # build pred index -> ensure lengths match by trimming preds to df_features length
+        n = min(len(df_features), len(pred_df))
+        pred_df = pred_df.iloc[:n].copy()
+        pred_df.index = df_features.iloc[:n][id_col].values
+
+        # set index on x_test and join (left join to preserve all x_test rows)
+        out_indexed = df_features_x.set_index(id_col)
+        out_indexed = out_indexed.join(pred_df, how='left')
+        output_df = out_indexed.reset_index()
+    else:
+        # No id column available in both -> align by position but don't assume equal lengths
+        print("No shared ID column found; aligning by position and filling missing values with NaN")
+        output_df = df_features_x.copy()
+        n_pred = len(pred_df)
+        # assign for the overlapping prefix
+        overlap = min(len(output_df), n_pred)
+        for col in pred_df.columns:
+            output_df.loc[:overlap-1, col] = pred_df[col].iloc[:overlap].values
+        # leave remaining rows as NaN for prediction columns
 
     # Save the updated file
+    # Ensure the output includes the original x_test columns
     output_path = "data/x_predicted_output.csv"
+    # If df_features_x has an index column (from CSV), drop it
     output_df.to_csv(output_path, index=False)
     print(f"Predictions saved to: {output_path}")
 

@@ -430,13 +430,19 @@
                                 customer.risk_level === 'medium' ? 'badge-medium' : 'badge-low';
         
         const item = document.createElement('div');
-        item.className = 'customer-item';
-        item.onclick = () => selectCustomer(customer);
+  item.className = 'customer-item';
+  // bind click handler and pass the clicked element so we don't rely on a global `event`
+  item.addEventListener('click', function () { selectCustomer(customer, this); });
         item.innerHTML = `
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h6 class="mb-1 fw-bold">${customer.name}</h6>
               <small class="text-muted">ID: ${customer.id} • ${customer.segment}</small>
+              <div class="small text-muted mt-1">
+                <span class="me-3">Confidence: ${customer.confidence_score ?? 'N/A'}</span>
+                <span class="me-3">Age: ${customer.age_in_years ?? 'N/A'}</span>
+                <span>Ann. Amt: ${customer.curr_ann_amt ?? 'N/A'}</span>
+              </div>
             </div>
             <span class="badge badge-custom ${riskColorClass}">${customer.risk_level}</span>
           </div>
@@ -448,12 +454,12 @@
     }
 
     // Select customer
-    function selectCustomer(customer) {
+    function selectCustomer(customer, element) {
       // Update active state
       document.querySelectorAll('.customer-item').forEach(item => {
         item.classList.remove('active');
       });
-      event.currentTarget.classList.add('active');
+      if (element) element.classList.add('active');
 
       // Render customer details
       renderCustomerDetails(customer);
@@ -488,6 +494,7 @@
                   <div>
                     <small class="text-muted d-block">Churn Probability</small>
                     <h4 class="mb-0 fw-bold">${customer.churn_probability}%</h4>
+                    <small class="text-muted">Confidence Score: ${customer.confidence_score ?? 'N/A'}</small>
                   </div>
                 </div>
                 <div class="progress-custom">
@@ -528,38 +535,42 @@
             <div class="col-md-6">
               <div class="info-card">
                 <h6 class="fw-bold mb-3 text-primary">
-                  <i class="fas fa-info-circle me-2"></i>Account Information
+                  <i class="fas fa-info-circle me-2"></i>Personal Information
                 </h6>
                 <div class="mb-2">
-                  <small class="text-muted">Segment:</small>
-                  <span class="float-end fw-semibold">${customer.segment}</span>
+                  <small class="text-muted">City:</small>
+                  <span class="float-end fw-semibold">${customer.city}</span>
                 </div>
                 <div class="mb-2">
-                  <small class="text-muted">Contract Type:</small>
-                  <span class="float-end fw-semibold">${customer.contract_type}</span>
+                  <small class="text-muted">Age (years):</small>
+                  <span class="float-end fw-semibold">${customer.age_in_years ?? 'N/A'}</span>
+                </div>
+                <div class="mb-2">
+                  <small class="text-muted">Marital Status:</small>
+                  <span class="float-end fw-semibold">${customer.marital_status}</span>
                 </div>
                 <div>
-                  <small class="text-muted">Payment Method:</small>
-                  <span class="float-end fw-semibold">${customer.payment_method}</span>
+                  <small class="text-muted">Has Children:</small>
+                  <span class="float-end fw-semibold">${customer.has_children}</span>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
               <div class="info-card">
                 <h6 class="fw-bold mb-3 text-primary">
-                  <i class="fas fa-wifi me-2"></i>Service Details
+                  <i class="fas fa-home me-2"></i>Property Details
                 </h6>
                 <div class="mb-2">
-                  <small class="text-muted">Internet Service:</small>
-                  <span class="float-end fw-semibold">${customer.internet_service}</span>
+                  <small class="text-muted">Home Owner:</small>
+                  <span class="float-end fw-semibold">${customer.home_owner}</span>
                 </div>
                 <div class="mb-2">
-                  <small class="text-muted">Total Charges:</small>
-                  <span class="float-end fw-semibold">$${customer.total_charges.toLocaleString()}</span>
+                  <small class="text-muted">College Degree:</small>
+                  <span class="float-end fw-semibold">${customer.college_degree}</span>
                 </div>
                 <div>
-                  <small class="text-muted">Average Monthly:</small>
-                  <span class="float-end fw-semibold">$${(customer.total_charges / customer.tenure).toFixed(2)}</span>
+                  <small class="text-muted">Monthly Revenue:</small>
+                  <span class="float-end fw-semibold">$${customer.monthly_charges.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -572,40 +583,37 @@
                 <h5 class="mb-1 fw-bold">
                   <i class="fas fa-chart-bar me-2 text-primary"></i>Advanced Analysis & Insights
                 </h5>
-                <small class="text-muted">View detailed churn factors and recommendations</small>
+                <small class="text-muted">View detailed churn factors and AI recommendations</small>
               </div>
               <i class="fas fa-chevron-down expand-icon" id="advancedAnalysisIcon"></i>
             </div>
             
             <div class="expandable-content" id="advancedAnalysis">
               <div class="mt-4">
-                <!-- Feature Importance Chart -->
-                <div class="chart-container mb-4">
+                <!-- SHAP Feature Importance Plot -->
+                  <span class="float-end fw-semibold">$${customer.monthly_charges.toFixed(2)}</span>
                   <h6 class="fw-bold mb-3 text-primary">
-                    <i class="fas fa-tasks me-2"></i>Key Factors Affecting Churn
+                    <i class="fas fa-tasks me-2"></i>Feature Importance (SHAP Values)
                   </h6>
-                  <canvas id="featureChart" height="100"></canvas>
+                  <canvas id="shapChart" height="200"></canvas>
                 </div>
 
-                <!-- Recommendations -->
-                <div>
+                <!-- AI Recommendations -->
+                <div class="info-card mb-4">
                   <h6 class="fw-bold mb-3 text-primary">
-                    <i class="fas fa-lightbulb me-2"></i>Recommended Actions
+                    <i class="fas fa-robot me-2"></i>AI-Powered Recommendations
                   </h6>
-                  ${customer.recommendations.map((rec, index) => `
-                    <div class="recommendation-item">
-                      <div class="d-flex">
-                        <div class="me-3">
-                          <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                            ${index + 1}
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <p class="mb-0">${rec}</p>
-                        </div>
-                      </div>
-                    </div>
-                  `).join('')}
+                  <div id="aiRecommendations">
+                    <!-- AI recommendations will be populated here -->
+                  </div>
+                </div>
+
+                <!-- Standard Feature Analysis -->
+                <div class="chart-container mb-4">
+                  <h6 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-chart-line me-2"></i>Model Confidence Analysis
+                  </h6>
+                  <canvas id="featureChart" height="100"></canvas>
                 </div>
               </div>
             </div>
