@@ -485,7 +485,7 @@
         <div class="mt-4">
           <!-- Quick Stats -->
           <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="info-card">
                 <div class="d-flex align-items-center mb-3">
                   <div class="info-icon me-3">
@@ -494,7 +494,7 @@
                   <div>
                     <small class="text-muted d-block">Churn Probability</small>
                     <h4 class="mb-0 fw-bold">${customer.churn_probability}%</h4>
-                    <small class="text-muted">Confidence Score: ${customer.confidence_score ?? 'N/A'}</small>
+                    
                   </div>
                 </div>
                 <div class="progress-custom">
@@ -502,7 +502,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="info-card">
                 <div class="d-flex align-items-center">
                   <div class="info-icon me-3">
@@ -510,12 +510,26 @@
                   </div>
                   <div>
                     <small class="text-muted d-block">Customer Tenure</small>
-                    <h4 class="mb-0 fw-bold">${customer.tenure} months</h4>
+                    <h4 class="mb-0 fw-bold">${customer.tenure} days</h4>
+                    
                   </div>
                 </div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+              <div class="info-card text-center">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="info-icon me-3">
+                    <i class="fas fa-percent"></i>
+                  </div>
+                  <div class="flex-grow-1 text-start">
+                    <small class="text-muted d-block">Confidence Score</small>
+                    <h4 class="mb-0 fw-bold">${(customer.confidence_score !== undefined && customer.confidence_score !== null) ? (Number(customer.confidence_score).toFixed(1) + '%') : 'N/A'}</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
               <div class="info-card">
                 <div class="d-flex align-items-center">
                   <div class="info-icon me-3">
@@ -530,58 +544,14 @@
             </div>
           </div>
 
-          <!-- Key Information -->
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <div class="info-card">
-                <h6 class="fw-bold mb-3 text-primary">
-                  <i class="fas fa-info-circle me-2"></i>Personal Information
-                </h6>
-                <div class="mb-2">
-                  <small class="text-muted">City:</small>
-                  <span class="float-end fw-semibold">${customer.city}</span>
-                </div>
-                <div class="mb-2">
-                  <small class="text-muted">Age (years):</small>
-                  <span class="float-end fw-semibold">${customer.age_in_years ?? 'N/A'}</span>
-                </div>
-                <div class="mb-2">
-                  <small class="text-muted">Marital Status:</small>
-                  <span class="float-end fw-semibold">${customer.marital_status}</span>
-                </div>
-                <div>
-                  <small class="text-muted">Has Children:</small>
-                  <span class="float-end fw-semibold">${customer.has_children}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="info-card">
-                <h6 class="fw-bold mb-3 text-primary">
-                  <i class="fas fa-home me-2"></i>Property Details
-                </h6>
-                <div class="mb-2">
-                  <small class="text-muted">Home Owner:</small>
-                  <span class="float-end fw-semibold">${customer.home_owner}</span>
-                </div>
-                <div class="mb-2">
-                  <small class="text-muted">College Degree:</small>
-                  <span class="float-end fw-semibold">${customer.college_degree}</span>
-                </div>
-                <div>
-                  <small class="text-muted">Monthly Revenue:</small>
-                  <span class="float-end fw-semibold">$${customer.monthly_charges.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Key Information removed: Personal Information & Property Details -->
 
           <!-- Expandable Advanced Analysis -->
           <div class="expandable-section">
             <div class="expand-trigger" onclick="toggleExpand('advancedAnalysis')">
               <div>
                 <h5 class="mb-1 fw-bold">
-                  <i class="fas fa-chart-bar me-2 text-primary"></i>Advanced Analysis & Insights
+                  <i class="fas fa-chart-bar me-2 text-primary"></i>shap Insights
                 </h5>
                 <small class="text-muted">View detailed churn factors and AI recommendations</small>
               </div>
@@ -591,14 +561,21 @@
             <div class="expandable-content" id="advancedAnalysis">
               <div class="mt-4">
                 <!-- SHAP Feature Importance Plot -->
-                  <span class="float-end fw-semibold">$${customer.monthly_charges.toFixed(2)}</span>
                   <h6 class="fw-bold mb-3 text-primary">
                     <i class="fas fa-tasks me-2"></i>Feature Importance (SHAP Values)
                   </h6>
-                  <canvas id="shapChart" height="200"></canvas>
+                  <canvas id="shapChart" height="260"></canvas>
                 </div>
 
                 <!-- AI Recommendations -->
+                <!-- Description box for AI Insights -->
+                <div class="info-card mb-3" id="aiDescription">
+                  <h6 class="fw-bold mb-2 text-primary">
+                    <i class="fas fa-lightbulb me-2"></i>AI Summary
+                  </h6>
+                  <p class="mb-0 text-muted" id="aiDescriptionText">Brief AI-driven summary and interpretation will appear here for the selected customer.</p>
+                </div>
+
                 <div class="info-card mb-4">
                   <h6 class="fw-bold mb-3 text-primary">
                     <i class="fas fa-robot me-2"></i>AI-Powered Recommendations
@@ -621,37 +598,43 @@
         </div>
       `;
 
-      // Render chart after a small delay to ensure canvas is in DOM
-      setTimeout(() => renderChart(customer), 100);
+      // Render SHAP bar chart after a small delay to ensure canvas is in DOM
+      setTimeout(() => {
+        renderChart(customer);
+        renderShapChart(customer);
+      }, 100);
     }
 
-    // Toggle expand section
-    function toggleExpand(sectionId) {
-      const content = document.getElementById(sectionId);
-      const icon = document.getElementById(sectionId + 'Icon');
-      
-      content.classList.toggle('expanded');
-      icon.classList.toggle('rotated');
-    }
 
-    // Render chart
-    function renderChart(customer) {
-      const canvas = document.getElementById('featureChart');
-      if (!canvas) return;
+    // Render SHAP bar chart (Feature Importance)
+    let shapChartInstance;
+    function renderShapChart(customer) {
+      const shapCanvas = document.getElementById('shapChart');
+      if (!shapCanvas || !customer.features || !customer.feature_importance) return;
 
-      if (currentChart) {
-        currentChart.destroy();
+      // Destroy previous chart if exists
+      if (shapChartInstance) {
+        shapChartInstance.destroy();
       }
 
-      const ctx = canvas.getContext('2d');
-      currentChart = new Chart(ctx, {
+      // Prepare data: sort by absolute SHAP value descending
+      const zipped = customer.features.map((f, i) => ({
+        feature: f,
+        shap: customer.feature_importance[i]
+      }));
+      zipped.sort((a, b) => Math.abs(b.shap) - Math.abs(a.shap));
+      const featuresSorted = zipped.map(z => z.feature);
+      const shapSorted = zipped.map(z => z.shap);
+
+      const ctx = shapCanvas.getContext('2d');
+      shapChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: customer.features,
+          labels: featuresSorted,
           datasets: [{
-            label: 'Impact Score',
-            data: customer.feature_importance,
-            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+            label: 'SHAP Value',
+            data: shapSorted,
+            backgroundColor: shapSorted.map(v => v >= 0 ? 'rgba(102, 126, 234, 0.8)' : 'rgba(245, 87, 108, 0.7)'),
             borderRadius: 8,
             borderSkipped: false,
           }]
@@ -663,6 +646,7 @@
           plugins: {
             legend: { display: false },
             tooltip: {
+
               backgroundColor: 'rgba(0, 0, 0, 0.8)',
               padding: 12,
               cornerRadius: 8,
@@ -672,19 +656,19 @@
           },
           scales: {
             x: {
-              beginAtZero: true,
-              max: 100,
+              title: { display: true, text: 'SHAP Value' },
               grid: { color: 'rgba(0, 0, 0, 0.05)' },
               ticks: { font: { size: 12 } }
             },
             y: {
-              grid: { display: false },
+              title: { display: true, text: 'Feature' },
               ticks: { font: { size: 12 } }
             }
           }
         }
       });
     }
+
 
     // Apply filters
     function applyFilters() {
