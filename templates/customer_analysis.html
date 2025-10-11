@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Analysis - Data Analysis Platform</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-weight: 700;
+      font-size: 1.75rem;
+      letter-spacing: -0.5px;
+    }
+
+    header .btn {
+      border-radius: 50px;
+      font-weight: 600;
+      padding: 0.6rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    header .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+    }
+
+    .card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      transform: translateY(-4px);
+    }
+
+    .filters-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+      border: 2px solid #e8ecf7;
+    }
+
+    .form-control, .form-select {
+      border-radius: 12px;
+      border: 2px solid #e8ecf1;
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Customer List Styles */
+    .customer-list-card {
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+    }
+
+    .customer-list-card::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .customer-list-card::-webkit-scrollbar-track {
+      background: #f1f3f5;
+      border-radius: 10px;
+    }
+
+    .customer-list-card::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 10px;
+    }
+
+    .customer-item {
+      padding: 1.25rem;
+      border-bottom: 1px solid #f1f3f5;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .customer-item:hover {
+      background: linear-gradient(90deg, #f8f9ff 0%, #ffffff 100%);
+      border-left: 4px solid #667eea;
+      padding-left: calc(1.25rem - 4px);
+    }
+
+    .customer-item.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-left: 4px solid #764ba2;
+    }
+
+    .customer-item.active .text-muted,
+    .customer-item.active h6 {
+      color: white !important;
+    }
+
+    .customer-item.active .badge {
+      background: rgba(255,255,255,0.25) !important;
+      color: white;
+    }
+
+    /* Customer Details Styles */
+    .detail-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 20px 20px 0 0;
+      margin: -1.5rem -1.5rem 0 -1.5rem;
+    }
+
+    .info-card {
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 2px solid #e8ecf7;
+      transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+
+    .info-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    .progress-custom {
+      height: 12px;
+      border-radius: 10px;
+      background: #e8ecf1;
+      overflow: hidden;
+    }
+
+    .progress-bar-custom {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.6s ease;
+    }
+
+    .badge-custom {
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .badge-high {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    .badge-medium {
+      background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+      color: #2d3436;
+    }
+
+    .badge-low {
+      background: linear-gradient(135deg, #a8e6cf 0%, #3ecc91 100%);
+      color: white;
+    }
+
+    /* Expandable Section */
+    .expandable-section {
+      margin-top: 2rem;
+      border-top: 2px solid #e8ecf7;
+      padding-top: 2rem;
+    }
+
+    .expand-trigger {
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+      border: 2px solid #e8ecf7;
+      border-radius: 16px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .expand-trigger:hover {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.1);
+    }
+
+    .expand-icon {
+      transition: transform 0.3s ease;
+      color: #667eea;
+      font-size: 1.5rem;
+    }
+
+    .expand-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    .expandable-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .expandable-content.expanded {
+      max-height: 2000px;
+    }
+
+    .recommendation-item {
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+      border-left: 4px solid #667eea;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .recommendation-item:hover {
+      transform: translateX(8px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      border: 2px solid #e8ecf7;
+    }
+
+    footer {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-top: 4rem;
+      padding: 2rem 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #8e9aaf;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.3;
+    }
+
+    @media (max-width: 768px) {
+      .customer-list-card {
+        max-height: 400px;
+        margin-bottom: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <h1 class="mb-0 d-flex align-items-center">
+          <i class="fas fa-chart-pie me-3"></i>
+          Customer Analysis Dashboard
+        </h1>
+        <div class="mt-3 mt-md-0">
+          <a href="{{ url_for('predictions') }}" class="btn btn-light">
+            <i class="fas fa-home me-2"></i>Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mt-5 mb-5">
+    <!-- Filters -->
+    <div class="card filters-card p-4 mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="customerSearch" class="form-label fw-semibold">
+            <i class="fas fa-search me-2 text-primary"></i>Search Customer
+          </label>
+          <input type="text" id="customerSearch" class="form-control" placeholder="Enter customer ID or name...">
+        </div>
+        <div class="col-md-3">
+          <label for="riskFilter" class="form-label fw-semibold">
+            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Risk Level
+          </label>
+          <select id="riskFilter" class="form-select">
+            <option value="">All Risk Levels</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="segmentFilter" class="form-label fw-semibold">
+            <i class="fas fa-users me-2 text-success"></i>Customer Segment
+          </label>
+          <select id="segmentFilter" class="form-select">
+            <option value="">All Segments</option>
+            <option value="premium">Premium</option>
+            <option value="standard">Standard</option>
+            <option value="basic">Basic</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" onclick="applyFilters()">
+            <i class="fas fa-filter me-2"></i>Apply
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Customer List -->
+      <div class="col-lg-4 mb-4">
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="p-4 border-bottom">
+              <h5 class="mb-0 fw-bold">
+                <i class="fas fa-users me-2 text-primary"></i>Customer List
+                <span class="badge bg-secondary float-end" id="customerCount">5</span>
+              </h5>
+            </div>
+            <div class="customer-list-card" id="customerList">
+              <!-- Customers will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Details -->
+      <div class="col-lg-8 mb-4">
+        <div class="card">
+          <div class="card-body p-4" id="customerDetails">
+            <div class="empty-state">
+              <i class="fas fa-user-circle"></i>
+              <h4 class="mt-3">Select a Customer</h4>
+              <p>Choose a customer from the list to view their details and analysis</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center">
+    <p class="mb-0 fw-semibold">&copy; 2025 Data Analysis Platform — Powered by AI Insights</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Sample customer data
+    const customers = {{ customers_json | safe }};
+
+    let currentChart = null;
+
+    // Initialize
+    function init() {
+      renderCustomerList(customers);
+    }
+
+    // Render customer list
+    function renderCustomerList(data) {
+      const listContainer = document.getElementById('customerList');
+      listContainer.innerHTML = '';
+      
+      data.forEach(customer => {
+        const riskColorClass = customer.risk_level === 'high' ? 'badge-high' : 
+                                customer.risk_level === 'medium' ? 'badge-medium' : 'badge-low';
+        
+        const item = document.createElement('div');
+        item.className = 'customer-item';
+        item.onclick = () => selectCustomer(customer);
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1 fw-bold">${customer.name}</h6>
+              <small class="text-muted">ID: ${customer.id} • ${customer.segment}</small>
+            </div>
+            <span class="badge badge-custom ${riskColorClass}">${customer.risk_level}</span>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+
+      document.getElementById('customerCount').textContent = data.length;
+    }
+
+    // Select customer
+    function selectCustomer(customer) {
+      // Update active state
+      document.querySelectorAll('.customer-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+
+      // Render customer details
+      renderCustomerDetails(customer);
+    }
+
+    // Render customer details
+    function renderCustomerDetails(customer) {
+      const detailsContainer = document.getElementById('customerDetails');
+      const riskColorClass = customer.risk_level === 'high' ? 'badge-high' : 
+                              customer.risk_level === 'medium' ? 'badge-medium' : 'badge-low';
+      
+      detailsContainer.innerHTML = `
+        <div class="detail-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h3 class="mb-2 fw-bold">${customer.name}</h3>
+              <p class="mb-0 opacity-75">Customer ID: ${customer.id}</p>
+            </div>
+            <span class="badge badge-custom ${riskColorClass} fs-6">${customer.risk_level} Risk</span>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <!-- Quick Stats -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="info-card">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="info-icon me-3">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Churn Probability</small>
+                    <h4 class="mb-0 fw-bold">${customer.churn_probability}%</h4>
+                  </div>
+                </div>
+                <div class="progress-custom">
+                  <div class="progress-bar-custom" style="width: ${customer.churn_probability}%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-card">
+                <div class="d-flex align-items-center">
+                  <div class="info-icon me-3">
+                    <i class="fas fa-calendar-alt"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Customer Tenure</small>
+                    <h4 class="mb-0 fw-bold">${customer.tenure} months</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="info-card">
+                <div class="d-flex align-items-center">
+                  <div class="info-icon me-3">
+                    <i class="fas fa-dollar-sign"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Monthly Charges</small>
+                    <h4 class="mb-0 fw-bold">$${customer.monthly_charges}</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Information -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div class="info-card">
+                <h6 class="fw-bold mb-3 text-primary">
+                  <i class="fas fa-info-circle me-2"></i>Account Information
+                </h6>
+                <div class="mb-2">
+                  <small class="text-muted">Segment:</small>
+                  <span class="float-end fw-semibold">${customer.segment}</span>
+                </div>
+                <div class="mb-2">
+                  <small class="text-muted">Contract Type:</small>
+                  <span class="float-end fw-semibold">${customer.contract_type}</span>
+                </div>
+                <div>
+                  <small class="text-muted">Payment Method:</small>
+                  <span class="float-end fw-semibold">${customer.payment_method}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-card">
+                <h6 class="fw-bold mb-3 text-primary">
+                  <i class="fas fa-wifi me-2"></i>Service Details
+                </h6>
+                <div class="mb-2">
+                  <small class="text-muted">Internet Service:</small>
+                  <span class="float-end fw-semibold">${customer.internet_service}</span>
+                </div>
+                <div class="mb-2">
+                  <small class="text-muted">Total Charges:</small>
+                  <span class="float-end fw-semibold">$${customer.total_charges.toLocaleString()}</span>
+                </div>
+                <div>
+                  <small class="text-muted">Average Monthly:</small>
+                  <span class="float-end fw-semibold">$${(customer.total_charges / customer.tenure).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expandable Advanced Analysis -->
+          <div class="expandable-section">
+            <div class="expand-trigger" onclick="toggleExpand('advancedAnalysis')">
+              <div>
+                <h5 class="mb-1 fw-bold">
+                  <i class="fas fa-chart-bar me-2 text-primary"></i>Advanced Analysis & Insights
+                </h5>
+                <small class="text-muted">View detailed churn factors and recommendations</small>
+              </div>
+              <i class="fas fa-chevron-down expand-icon" id="advancedAnalysisIcon"></i>
+            </div>
+            
+            <div class="expandable-content" id="advancedAnalysis">
+              <div class="mt-4">
+                <!-- Feature Importance Chart -->
+                <div class="chart-container mb-4">
+                  <h6 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-tasks me-2"></i>Key Factors Affecting Churn
+                  </h6>
+                  <canvas id="featureChart" height="100"></canvas>
+                </div>
+
+                <!-- Recommendations -->
+                <div>
+                  <h6 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-lightbulb me-2"></i>Recommended Actions
+                  </h6>
+                  ${customer.recommendations.map((rec, index) => `
+                    <div class="recommendation-item">
+                      <div class="d-flex">
+                        <div class="me-3">
+                          <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                            ${index + 1}
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <p class="mb-0">${rec}</p>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Render chart after a small delay to ensure canvas is in DOM
+      setTimeout(() => renderChart(customer), 100);
+    }
+
+    // Toggle expand section
+    function toggleExpand(sectionId) {
+      const content = document.getElementById(sectionId);
+      const icon = document.getElementById(sectionId + 'Icon');
+      
+      content.classList.toggle('expanded');
+      icon.classList.toggle('rotated');
+    }
+
+    // Render chart
+    function renderChart(customer) {
+      const canvas = document.getElementById('featureChart');
+      if (!canvas) return;
+
+      if (currentChart) {
+        currentChart.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      currentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: customer.features,
+          datasets: [{
+            label: 'Impact Score',
+            data: customer.feature_importance,
+            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+            borderRadius: 8,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              cornerRadius: 8,
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              ticks: { font: { size: 12 } }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { font: { size: 12 } }
+            }
+          }
+        }
+      });
+    }
+
+    // Apply filters
+    function applyFilters() {
+      const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
+      const riskLevel = document.getElementById('riskFilter').value;
+      const segment = document.getElementById('segmentFilter').value;
+
+      let filtered = customers.filter(customer => {
+        const matchesSearch = customer.name.toLowerCase().includes(searchTerm) || 
+                             customer.id.toLowerCase().includes(searchTerm);
+        const matchesRisk = !riskLevel || customer.risk_level === riskLevel;
+        const matchesSegment = !segment || customer.segment.toLowerCase() === segment;
+
+        return matchesSearch && matchesRisk && matchesSegment;
+      });
+
+      renderCustomerList(filtered);
+
+      // Clear selection if current customer is filtered out
+      const detailsContainer = document.getElementById('customerDetails');
+      if (!detailsContainer.querySelector('.empty-state')) {
+        detailsContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-user-circle"></i>
+            <h4 class="mt-3">Select a Customer</h4>
+            <p>Choose a customer from the filtered list to view their details</p>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize on page load
+    init();
+  </script>
+</body>
+</html>
