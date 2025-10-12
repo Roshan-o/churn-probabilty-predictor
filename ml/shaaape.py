@@ -4,6 +4,7 @@ import shap
 import pandas as pd
 import numpy as np
 import os
+from flask import render_template
 
 def extract_shap_force_plots(bst: xgboost.Booster, X_test: pd.DataFrame, output_dir: str):
     """
@@ -47,18 +48,22 @@ def extract_shap_force_plots(bst: xgboost.Booster, X_test: pd.DataFrame, output_
                 link='identity',
                 show=False # Prevent immediate display
             )
+            # shap_html = f"<head>{shap.getjs()}</head><body>{html_plot.html()}</body>"
             
             # Use shap.save_html to save the plot as a self-contained HTML file
-            shap.save_html(full_plot_path, html_plot)
-            
-            plot_filenames.append(plot_filename)
-            
-        except Exception as e:
-            print(f"Error generating plot for row {i}: {e}. Skipping this row.")
-            continue
+            # shap.save_html(full_plot_path, shap_html)
 
-    print(f"✅ Generated and saved {len(plot_filenames)} SHAP force plots.")
-    return plot_filenames
+            plot_filenames.append(plot_filename)
+            # return render_template('shap_plots.html', shap_html=shap_html)
+            shap.save_html(full_plot_path, html_plot)
+            full_data=shap.force_plot(
+                explainer.expected_value, shap_values[:1000, :], X_test.iloc[:1000, :]
+            )
+            shap.save_html(os.path.join(output_dir, "summary.html"), full_data)
+
+        except Exception as e:
+            print(f"Error saving plot for customer {i}: {e}")
+
 
 
 if __name__ == '__main__':

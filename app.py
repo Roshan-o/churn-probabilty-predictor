@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, render_template_string
 import os
 import pandas as pd
 import numpy as np
@@ -9,6 +9,9 @@ from ml.pre_processing import preprocessing_data
 from ml.predict import predict
 # Import AI insight functions from new_gemini.py
 from ml.new_gemini import task1_prepare_and_store_all_ml_data, task2_generate_strategy_on_demand
+import shap
+import joblib
+from pathlib import Path
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -273,6 +276,246 @@ def generate_ai_insight(customer_index):
             'error': f'Failed to generate AI insight: {str(e)}',
             'success': False
         })
+
+@app.route('/shap')
+def shap_home():
+    """SHAP visualizations home page"""
+    # Get list of available SHAP plots
+    shap_plots_dir = Path('force_plots')
+    shap_files = []
+    
+    if shap_plots_dir.exists():
+        for file in shap_plots_dir.glob('force_plot_customer_*.html'):
+            customer_id = file.stem.replace('force_plot_customer_', '')
+            shap_files.append({
+                'customer_id': customer_id,
+                'filename': file.name,
+                'title': f'Customer {customer_id} SHAP Analysis'
+            })
+    
+    # Sort by customer ID numerically
+    shap_files.sort(key=lambda x: int(x['customer_id']))
+    
+    return render_template('shap_home.html', shap_files=shap_files)
+
+@app.route('/shap/customer/<int:customer_id>')
+def shap_customer(customer_id):
+    """Display SHAP visualization for a specific customer"""
+    file_path = Path(f'force_plots/force_plot_customer_{customer_id}.html')
+    
+    if not file_path.exists():
+        flash(f'SHAP visualization for customer {customer_id} not found.')
+        return redirect(url_for('shap_home'))
+    
+    # Read the HTML content
+    with open(file_path, 'r', encoding='utf-8') as f:
+        shap_html = f.read()
+    
+    # Enhanced HTML template with SHAP JavaScript library
+    enhanced_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SHAP Analysis - Customer {customer_id}</title>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                background-color: #f5f5f5;
+            }}
+            .header {{
+                background-color: #2c3e50;
+                color: white;
+                padding: 20px;
+                margin: -20px -20px 20px -20px;
+                text-align: center;
+            }}
+            .back-button {{
+                display: inline-block;
+                margin-bottom: 20px;
+                padding: 10px 20px;
+                background-color: #3498db;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }}
+            .back-button:hover {{
+                background-color: #2980b9;
+            }}
+            .shap-container {{
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }}
+            .explanation {{
+                background-color: #ecf0f1;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border-left: 4px solid #3498db;
+            }}
+        </style>
+        <script src="https://cdn.jsdelivr.net/gh/slundberg/shap@master/js/dist/bundle.js"></script>
+    </head>
+    <body>
+        <div class="header">
+            <h1>SHAP Force Plot Analysis</h1>
+            <h2>Customer {customer_id}</h2>
+        </div>
+        
+        <a href="/shap" class="back-button">← Back to SHAP Home</a>
+        
+        <div class="explanation">
+            <h3>Understanding SHAP Force Plots</h3>
+            <p>This visualization shows how each feature contributes to the model's prediction for this customer:</p>
+            <ul>
+                <li><strong>Red features</strong> push the prediction towards higher churn probability</li>
+                <li><strong>Blue features</strong> push the prediction towards lower churn probability</li>
+                <li>The width of each feature bar represents the magnitude of its impact</li>
+                <li>The base value represents the average prediction across all customers</li>
+            </ul>
+        </div>
+        
+        <div class="shap-container">
+            {shap_html.replace('<html>', '').replace('</html>', '').replace('<head>', '').replace('</head>', '').replace('<body>', '').replace('</body>', '')}
+        </div>
+        
+        <div class="explanation">
+            <h3>Next Steps</h3>
+            <p>Based on this SHAP analysis, you can:</p>
+            <ul>
+                <li>Focus retention efforts on the red (risk-increasing) features</li>
+                <li>Leverage the blue (protective) features in your strategy</li>
+                <li>Compare this analysis with other customers to identify patterns</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return render_template_string(enhanced_html)
+
+@app.route('/shap/generate')
+def generate_shap():
+    """Generate new SHAP visualizations (example endpoint)"""
+    try:
+        flash('SHAP visualizations would be generated here. Implement with your actual model and data.')
+        return redirect(url_for('shap_home'))
+        
+    except Exception as e:
+        flash(f'Error generating SHAP visualizations: {str(e)}')
+        return redirect(url_for('shap_home'))
+
+@app.route('/shap/files/<filename>')
+def serve_shap_file(filename):
+    """Serve SHAP HTML files directly"""
+    return send_from_directory('force_plots', filename)
+
+@app.route('/shap/summary')
+def shap_summary():
+    """Display SHAP summary visualization"""
+    summary_file_path = Path('shap_plots/force_plots/summary.html')
+    
+    if not summary_file_path.exists():
+        flash('SHAP summary visualization not found.')
+        return redirect(url_for('predictions'))
+    
+    # Read the HTML content
+    with open(summary_file_path, 'r', encoding='utf-8') as f:
+        summary_html = f.read()
+    
+    # Enhanced HTML template for summary
+    enhanced_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SHAP Summary Analysis</title>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                background-color: #f5f5f5;
+            }}
+            .header {{
+                background-color: #2c3e50;
+                color: white;
+                padding: 20px;
+                margin: -20px -20px 20px -20px;
+                text-align: center;
+            }}
+            .back-button {{
+                display: inline-block;
+                margin-bottom: 20px;
+                padding: 10px 20px;
+                background-color: #3498db;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }}
+            .back-button:hover {{
+                background-color: #2980b9;
+            }}
+            .shap-container {{
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }}
+            .explanation {{
+                background-color: #ecf0f1;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border-left: 4px solid #3498db;
+            }}
+        </style>
+        <script src="https://cdn.jsdelivr.net/gh/slundberg/shap@master/js/dist/bundle.js"></script>
+    </head>
+    <body>
+        <div class="header">
+            <h1>SHAP Summary Analysis</h1>
+            <h2>Overall Model Insights</h2>
+        </div>
+        
+        <a href="/predictions" class="back-button">← Back to Dashboard</a>
+        
+        <div class="explanation">
+            <h3>Understanding SHAP Summary Plots</h3>
+            <p>This visualization provides an overview of feature importance across all customers:</p>
+            <ul>
+                <li><strong>Feature ranking</strong> shows which features are most important globally</li>
+                <li><strong>Distribution patterns</strong> reveal how feature effects vary across customers</li>
+                <li><strong>Color coding</strong> indicates feature values (red = high, blue = low)</li>
+                <li><strong>Spread</strong> shows the range of SHAP values for each feature</li>
+            </ul>
+        </div>
+        
+        <div class="shap-container">
+            {summary_html.replace('<html>', '').replace('</html>', '').replace('<head>', '').replace('</head>', '').replace('<body>', '').replace('</body>', '')}
+        </div>
+        
+        <div class="explanation">
+            <h3>Key Insights</h3>
+            <p>Use this summary analysis to:</p>
+            <ul>
+                <li>Identify the most influential features for churn prediction</li>
+                <li>Understand the typical direction of feature effects</li>
+                <li>Spot features with high variability in their impact</li>
+                <li>Guide feature engineering and data collection priorities</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return render_template_string(enhanced_html)
 
 if __name__ == '__main__':
     app.run(debug=True)

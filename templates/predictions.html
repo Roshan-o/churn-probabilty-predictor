@@ -9,6 +9,23 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .feature-highlight {
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            background: rgba(255, 193, 7, 0.1);
+            margin-bottom: 15px;
+        }
+        .feature-highlight i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .feature-highlight h6 {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,6 +45,9 @@
                     </a>
                     <a href="{{ url_for('customer_analysis') }}" class="btn btn-outline-info me-2">
                         <i class="fas fa-user-chart me-1"></i>Customer Analysis
+                    </a>
+                    <a href="{{ url_for('shap_home') }}" class="btn btn-outline-warning me-2">
+                        <i class="fas fa-search-plus me-1"></i>SHAP Analysis
                     </a>
                     <a href="{{ url_for('reset') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-refresh me-1"></i>Reset
@@ -124,7 +144,124 @@
                 </div>
             </div>
         </div>
+        <!-- SHAP Analysis Preview -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search-plus me-2"></i>
+                            SHAP Explainable AI Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="py-4">
+                            <i class="fas fa-chart-bar fa-4x text-warning mb-3"></i>
+                            <h5>Interactive SHAP Visualizations Available</h5>
+                            <p class="text-muted mb-4">
+                                Explore detailed explanations of how each feature contributes to individual customer predictions.
+                            </p>
+                            <a href="{{ url_for('shap_home') }}" class="btn btn-warning btn-lg">
+                                <i class="fas fa-eye me-2"></i>View SHAP Analysis
+                            </a>
+                        </div>
+                        <div class="row mt-4">
+                            <!-- <div class="col-md-4">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-lightbulb text-warning"></i>
+                                    <h6>Feature Impact</h6>
+                                    <small class="text-muted">See how each feature affects predictions</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-users text-info"></i>
+                                    <h6>Customer-Specific</h6>
+                                    <small class="text-muted">Individual analysis for each customer</small>
+                                </div>
+                            </div> -->
+                            <!-- <div class="col-md-4">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-shield-alt text-success"></i>
+                                    <h6>Model Transparency</h6>
+                                    <small class="text-muted">Understand AI decision-making</small>
+                                </div>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- SHAP Summary Visualization -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            SHAP Summary Insights
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="text-primary">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Overall Feature Importance Analysis
+                                </h6>
+                                <p class="text-muted mb-3">
+                                    View the comprehensive SHAP summary that shows which features are most important 
+                                    for churn prediction across all customers. This visualization helps identify 
+                                    key patterns and insights from your data.
+                                </p>
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        The summary plot displays feature importance ranking and the distribution 
+                                        of SHAP values for each feature across all customers.
+                                    </small>
+                                </div>
+                                <a href="{{ url_for('shap_summary') }}" class="btn btn-info" target="_blank">
+                                    <i class="fas fa-external-link-alt me-2"></i>
+                                    Open Summary Analysis
+                                </a>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="py-3">
+                                    <i class="fas fa-chart-area fa-3x text-info mb-3"></i>
+                                    <h6 class="text-muted">Summary Visualization</h6>
+                                    <small class="text-muted">
+                                        Global feature importance and distribution patterns
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Inline Preview Option -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="border-top pt-3">
+                                    <h6 class="text-secondary mb-3">
+                                        <i class="fas fa-eye me-2"></i>Quick Preview
+                                    </h6>
+                                    <div class="text-center">
+                                        <iframe 
+                                            src="{{ url_for('shap_summary') }}" 
+                                            width="100%" 
+                                            height="600" 
+                                            frameborder="0" 
+                                            style="border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"
+                                            title="SHAP Summary Analysis">
+                                        </iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Main Predictions Content -->
         <!-- <div class="row mt-4 justify-content-center">
             <!-- Model Performance -->

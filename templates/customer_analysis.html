@@ -538,7 +538,7 @@
                   </div>
                   <div class="flex-grow-1 text-start">
                     <small class="text-muted d-block">Confidence Score</small>
-                    <h4 class="mb-0 fw-bold">${(customer.confidence_score !== undefined && customer.confidence_score !== null) ? (Number(customer.confidence_score).toFixed(1) + '%') : 'N/A'}</h4>
+                    <h4 class="mb-0 fw-bold">${(customer.confidence_score !== undefined && customer.confidence_score !== null) ? (Number(customer.confidence_score*100).toFixed(1) + '%') : 'N/A'}</h4>
                   </div>
                 </div>
               </div>
@@ -577,22 +577,6 @@
                   <p class="mb-0 text-muted" id="aiDescriptionText">Brief AI-driven summary and interpretation will appear here for the selected customer.</p>
                 </div>
 
-                <div class="info-card mb-4">
-                  <h6 class="fw-bold mb-3 text-primary">
-                    <i class="fas fa-robot me-2"></i>AI-Powered Recommendations
-                  </h6>
-                  <div id="aiRecommendations">
-                    <!-- AI recommendations will be populated here -->
-                  </div>
-                </div>
-
-                <!-- Standard Feature Analysis -->
-                <div class="chart-container mb-4">
-                  <h6 class="fw-bold mb-3 text-primary">
-                    <i class="fas fa-chart-line me-2"></i>Model Confidence Analysis
-                  </h6>
-                  <canvas id="featureChart" height="100"></canvas>
-                </div>
               </div>
             </div>
           </div>
