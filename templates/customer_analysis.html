@@ -301,6 +301,20 @@
       opacity: 0.3;
     }
 
+    .ai-insight-content {
+      background: linear-gradient(135deg, #f0f8ff 0%, #e8f4fd 100%);
+      border-left: 4px solid #667eea;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .ai-insight-content strong {
+      color: #667eea;
+    }
+
     @media (max-width: 768px) {
       .customer-list-card {
         max-height: 400px;
@@ -546,27 +560,14 @@
 
           <!-- Key Information removed: Personal Information & Property Details -->
 
-          <!-- Expandable Advanced Analysis -->
-          <div class="expandable-section">
-            <div class="expand-trigger" onclick="toggleExpand('advancedAnalysis')">
-              <div>
-                <h5 class="mb-1 fw-bold">
-                  <i class="fas fa-chart-bar me-2 text-primary"></i>shap Insights
-                </h5>
-                <small class="text-muted">View detailed churn factors and AI recommendations</small>
-              </div>
-              <i class="fas fa-chevron-down expand-icon" id="advancedAnalysisIcon"></i>
-            </div>
+          <!-- SHAP Insights -->
+          <div class="mt-4">
+            <h5 class="mb-3 fw-bold">
+              <i class="fas fa-chart-bar me-2 text-primary"></i>SHAP Insights
+            </h5>
             
-            <div class="expandable-content" id="advancedAnalysis">
+            <div>
               <div class="mt-4">
-                <!-- SHAP Feature Importance Plot -->
-                  <h6 class="fw-bold mb-3 text-primary">
-                    <i class="fas fa-tasks me-2"></i>Feature Importance (SHAP Values)
-                  </h6>
-                  <canvas id="shapChart" height="260"></canvas>
-                </div>
-
                 <!-- AI Recommendations -->
                 <!-- Description box for AI Insights -->
                 <div class="info-card mb-3" id="aiDescription">
@@ -598,10 +599,10 @@
         </div>
       `;
 
-      // Render SHAP bar chart after a small delay to ensure canvas is in DOM
+      // Render charts after a small delay to ensure canvas is in DOM
       setTimeout(() => {
         renderChart(customer);
-        renderShapChart(customer);
+        loadAIInsight(customer);
       }, 100);
     }
 
@@ -665,6 +666,102 @@
               ticks: { font: { size: 12 } }
             }
           }
+        }
+      });
+    }
+
+    // Load AI Insight using the imported functions from new_gemini.py
+    function loadAIInsight(customer) {
+      const aiDescriptionElement = document.getElementById('aiDescriptionText');
+      if (!aiDescriptionElement) return;
+      
+      // Show loading state
+      aiDescriptionElement.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating AI insights...';
+      
+      // Find customer index
+      const customerIndex = customers.findIndex(c => c.id === customer.id);
+      
+      // Fetch AI insight from the Flask route
+      fetch(`/generate_ai_insight/${customerIndex}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Format the AI insight with better styling
+            aiDescriptionElement.innerHTML = `
+              <div class="ai-insight-content">
+                <i class="fas fa-brain me-2 text-primary"></i>
+                <strong>AI-Generated Insight:</strong><br>
+                <div class="mt-2">${data.insight}</div>
+              </div>
+            `;
+          } else {
+            aiDescriptionElement.innerHTML = `
+              <span class="text-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${data.error || 'AI insights temporarily unavailable'}
+              </span>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error loading AI insight:', error);
+          aiDescriptionElement.innerHTML = `
+            <span class="text-muted">
+              <i class="fas fa-info-circle me-2"></i>
+              AI insights temporarily unavailable. Please try again later.
+            </span>
+          `;
+        });
+    }
+
+    // Render Feature Chart (Model Confidence Analysis)
+    let featureChartInstance;
+    function renderChart(customer) {
+      const featureCanvas = document.getElementById('featureChart');
+      if (!featureCanvas) return;
+
+      // Destroy previous chart if exists
+      if (featureChartInstance) {
+        featureChartInstance.destroy();
+      }
+
+      const ctx = featureCanvas.getContext('2d');
+      
+      // Create a simple confidence visualization
+      const confidenceScore = customer.confidence_score || customer.churn_probability || 50;
+      const riskScore = customer.churn_probability || 50;
+      
+      featureChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Confidence Score', 'Remaining'],
+          datasets: [{
+            data: [confidenceScore, 100 - confidenceScore],
+            backgroundColor: [
+              customer.risk_level === 'high' ? '#f5576c' : 
+              customer.risk_level === 'medium' ? '#fdcb6e' : '#3ecc91',
+              '#e8ecf1'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (context.dataIndex === 0) {
+                    return `Model Confidence: ${confidenceScore.toFixed(1)}%`;
+                  }
+                  return '';
+                }
+              }
+            }
+          },
+          cutout: '70%'
         }
       });
     }

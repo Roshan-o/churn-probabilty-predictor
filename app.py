@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import os
 import pandas as pd
 import numpy as np
@@ -7,6 +7,8 @@ from werkzeug.utils import secure_filename
 from ml.pre_processing import preprocessing_data
 # Import predict function to run model after preprocessing
 from ml.predict import predict
+# Import AI insight functions from new_gemini.py
+from ml.new_gemini import task1_prepare_and_store_all_ml_data, task2_generate_strategy_on_demand
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -15,6 +17,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Create data directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Global variable to store prepared ML data
+prepared_ml_data = None
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
@@ -235,6 +240,39 @@ def customer_analysis():
     customers_json = json.dumps(customers_data)
     
     return render_template('customer_analysis.html', customers_json=customers_json)
+
+@app.route('/generate_ai_insight/<int:customer_index>')
+def generate_ai_insight(customer_index):
+    """Generate AI insight for a specific customer using the imported functions"""
+    global prepared_ml_data
+    
+    try:
+        # Initialize ML data if not already done
+        if prepared_ml_data is None:
+            print("Preparing ML data for the first time...")
+            prepared_ml_data = task1_prepare_and_store_all_ml_data()
+            if prepared_ml_data is None:
+                return jsonify({'error': 'Failed to prepare ML data', 'success': False})
+        
+        # Generate strategy for the specific customer
+        strategy = task2_generate_strategy_on_demand(customer_index, prepared_ml_data)
+        
+        # Check if strategy generation was successful
+        if strategy.startswith("ERROR:") or strategy.startswith("Error:"):
+            return jsonify({'error': strategy, 'success': False})
+        
+        return jsonify({
+            'success': True,
+            'insight': strategy,
+            'customer_index': customer_index
+        })
+        
+    except Exception as e:
+        print(f"Error generating AI insight for customer {customer_index}: {e}")
+        return jsonify({
+            'error': f'Failed to generate AI insight: {str(e)}',
+            'success': False
+        })
 
 if __name__ == '__main__':
     app.run(debug=True)
