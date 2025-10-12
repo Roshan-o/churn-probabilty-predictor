@@ -1,6 +1,6 @@
 # Data Analysis Platform
 
-A clean and simple Flask web application for uploading CSV/Excel files and displaying AI-powered analysis results.
+A clean and simple Flask web application for uploading CSV files and displaying churn analysis results.
 
 ## Features
 
@@ -59,7 +59,4 @@ python app.py
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
 - **Charts**: Chart.js
 - **Icons**: Font Awesome
-
-## Note
-
-This application currently uses placeholder data for AI predictions. In a production environment, you would integrate with actual machine learning models and data processing pipelines.
+- **MLModels**: XGBoost , MLP
