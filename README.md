@@ -31,7 +31,7 @@ python app.py
 
 ## Usage
 
-1. **Upload Page**: Select or drag & drop a CSV/Excel file
+1. **Upload Page**: Select or drag & drop a CSV.
 2. **Analysis Page**: View AI predictions and insights based on your data
 3. **Reset**: Start over with a new file
 
