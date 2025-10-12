@@ -4,14 +4,18 @@ A clean and simple Flask web application for uploading CSV/Excel files and displ
 
 ## Features
 
-- **File Upload**: Drag & drop or browse to upload CSV/Excel files
-- **AI Predictions**: View comprehensive analysis results with:
+- **File Upload**: Drag & drop or browse to upload CSV.
+- **Explainability**: View comprehensive analysis results with:
   - Model performance metrics
   - Feature importance visualization
   - Predictions summary with charts
   - AI insights and recommendations
-- **Clean UI**: Modern, responsive design with Bootstrap
+- **Clean UI**: Modern, responsive design with Bootstrap.
 - **Interactive Charts**: Visual representations using Chart.js
+- **Customer Churn Prediction Model**: Machine learning models to predict customer churn.
+- **SHAP (SHapley Additive exPlanations)**: Unified approach to explain model predictions.
+- **Feature Importance Analysis**: Understand which features matter most.
+- **Interactive Visualizations**: Visual explanations of model behavior
 
 ## Setup
 
