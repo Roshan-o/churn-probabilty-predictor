@@ -1,7 +1,11 @@
 # Data Analysis Platform
 
-A clean and simple Flask web application for uploading CSV files and displaying churn analysis results.
 
+
+
+A clean and simple Flask web application for uploading CSV files and displaying churn analysis results.
+# Demo video
+https://github.com/user-attachments/assets/f75348ce-47ea-468d-951e-46109ede6576
 ## Features
 
 - **File Upload**: Drag & drop or browse to upload CSV.
