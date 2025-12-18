@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 try:
     # Use package-relative import when imported as part of the `ml` package
-    from .neural_net import MLP
+    from ml.neural_net import MLP
 except Exception:
     # Fallback for running the script directly
-    from neural_net import MLP
+    from ml.neural_net import MLP
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -55,7 +55,7 @@ def combined_confidence(p1, p2, w_agree=0.4, w_cert=0.6):
 def predict(path="data/x_processed.csv"):
     print(f"Loading data from: {path}")
     # Read original x_test early so we can attempt ID-based alignment
-    df_features_x = pd.read_csv(r'data\x_test.csv')
+    df_features_x = pd.read_csv(r'data/x_test.csv')
     df_features = pd.read_csv(path)
     X_np = df_features.values.astype(np.float32)
     # ----------------------------------------------------

@@ -154,7 +154,7 @@ def customer_analysis():
     customers_data = []
     
     # Generate mock churn probabilities (you can replace this with actual model predictions)
-    df = pd.read_csv(r'data\x_predicted_output.csv')
+    df = pd.read_csv(r'data/x_predicted_output.csv')
     
     for idx, row in df.iterrows():
         prob = row['final_prediction']
