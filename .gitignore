@@ -1,3 +1,6 @@
 .env
 vn
 X_test.csv
+*/__pycache__/
+*.pyc
+.DS_Store
